@@ -59,6 +59,7 @@ class Request(object):
 
     @classmethod
     def parse_auth(cls, header):
+        # Dumb attempt at parsing auth for now
         try:
             auth = header.split(' ')[1]
             parts = auth.split(':')

@@ -22,12 +22,12 @@ class MyPostEndpoint(Endpoint):
         if resp.status != 200:
             return ServerError({'message': 'Unable to fetch from external service'})
 
-        return Created({'test': 'foo'})
+        return Created({'test': 'foo2'})
 
 
 class MyGetEndpoint(Endpoint):
     async def process(self, request):
-        return Ok({'test': 'foo2'})
+        return Ok({'test1': 'foo2'})
 
 
 if __name__ == '__main__':

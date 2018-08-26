@@ -35,7 +35,7 @@ class ServerRunner(object):
             self._listen_for_changes()
         else:
             # the first time this is run, we need to restart with our
-            # environment variable
+            # environment variable set
             sys.exit(self._restart())
 
     def _listen_for_changes(self):
@@ -51,11 +51,6 @@ class ServerRunner(object):
             print('\nUser requested quit, exiting.')
 
     def _restart(self):
-        # Kind of hacky, but, to stop the aiohttp server, we just kill the event loop
-        # and swallow the exception. This is because we can't register the SIGTERM/SIGINT signals
-        # on the aiohttp server thread that is running because it's not the main thread.
-        self.loop.call_soon_threadsafe(self._stop_loop)
-
         while True:
             args = [sys.executable] + ['-W%s' % o for o in sys.warnoptions] + sys.argv
             new_environ = os.environ.copy()
@@ -63,13 +58,6 @@ class ServerRunner(object):
             exit_code = subprocess.call(args, env=new_environ)
             if exit_code != 3:
                 return exit_code
-
-    def _stop_loop(self):
-        try:
-            self.loop.stop()
-            self.loop.close()
-        except RuntimeError:
-            pass
 
     def _run_api(self, **kwargs):
         asyncio.set_event_loop(self.loop)

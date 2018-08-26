@@ -3,9 +3,6 @@ from dyspo.response import RestResponse, AbortException
 
 
 class Endpoint(object):
-    def __init__(self):
-        pass
-
     async def run(self, request):
         try:
             request = await self.transform_request(request)

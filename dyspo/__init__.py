@@ -8,7 +8,7 @@ from dyspo.runner import ServerRunner
 
 class Api(web.Application):
     def run(self, debug=False, **kwargs):
-        ServerRunner(self).run_server(debug, **kwargs)
+        ServerRunner(self).run_server(debug=debug, **kwargs)
 
     def add_routes(self, resources: List[Resource]):
         routes = [self._get_route(r) for r in resources]

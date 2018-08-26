@@ -50,7 +50,6 @@ class DirectoryMonitor(Monitor):
         diffs = False
 
         for file in get_watchable_files():
-
             try:
                 changed_time = os.path.getmtime(file)
             except FileNotFoundError:
