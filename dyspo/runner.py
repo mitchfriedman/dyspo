@@ -7,6 +7,12 @@ from aiohttp import web
 
 from dyspo.reloader import DirectoryMonitor
 
+EXIT_CODE = 3
+
+
+def _trigger_reload():
+    sys.exit(EXIT_CODE)
+
 
 class ServerRunner(object):
     def __init__(self, api, event=None):
@@ -17,42 +23,37 @@ class ServerRunner(object):
     def run_server(self, debug=False, **kwargs):
         try:
             if debug:
-                self.run_with_reloader(**kwargs)
-
+                self.run_reloadable(**kwargs)
             self._run_api(**kwargs)
-
         except KeyboardInterrupt:
             pass
 
-    def listen_for_changes(self):
+    def run_reloadable(self, **kwargs):
+        if os.environ.get('RUN_MAIN') == 'true':
+            Thread(target=self._run_api, daemon=True, kwargs=kwargs).start()
+            DirectoryMonitor(self.event, daemon=True).start()
+            self._listen_for_changes()
+        else:
+            # the first time this is run, we need to restart with our
+            # environment variable
+            sys.exit(self._restart())
+
+    def _listen_for_changes(self):
         try:
             while True:
                 self.event.wait(timeout=1.0)
 
                 if self.event.is_set():
                     print('Changes detected. Restarting server...\n')
-                    self._trigger_reload()
+                    _trigger_reload()
 
         except KeyboardInterrupt:
             print('\nUser requested quit, exiting.')
 
-    def run_threads(self, **kwargs):
-        runner = Thread(target=self._run_api, kwargs=kwargs)
-        runner.daemon = True
-        runner.start()
-
-        monitor = DirectoryMonitor(self.event, daemon=True)
-        monitor.start()
-
-    def run_with_reloader(self, **kwargs):
-        if os.environ.get('RUN_MAIN') == 'true':
-            self.run_threads(**kwargs)
-            self.listen_for_changes()
-        else:
-            sys.exit(self.restart())
-
-    def restart(self):
-        # to stop the aiohttp server
+    def _restart(self):
+        # Kind of hacky, but, to stop the aiohttp server, we just kill the event loop
+        # and swallow the exception. This is because we can't register the SIGTERM/SIGINT signals
+        # on the aiohttp server thread that is running because it's not the main thread.
         self.loop.call_soon_threadsafe(self._stop_loop)
 
         while True:
@@ -70,12 +71,6 @@ class ServerRunner(object):
         except RuntimeError:
             pass
 
-    def _trigger_reload(self):
-        sys.exit(3)
-
     def _run_api(self, **kwargs):
-        try:
-            asyncio.set_event_loop(self.loop)
-            web.run_app(self.api, handle_signals=False, **kwargs)
-        except SystemExit as e:
-            print('got system exit: ', e)
+        asyncio.set_event_loop(self.loop)
+        web.run_app(self.api, handle_signals=False, **kwargs)

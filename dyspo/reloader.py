@@ -4,22 +4,6 @@ import os
 from threading import Thread, Event
 
 
-class Monitor(Thread):
-    def __init__(self, event: Event, interval=None, **kwargs):
-        super().__init__(**kwargs)
-        self.event = event
-        self.interval = interval or 0.5
-
-    def run(self):
-        while True:
-            if self.reload_needed():
-                self.event.set()
-            time.sleep(self.interval)
-
-    def reload_needed(self):
-        return
-
-
 def get_watchable_files():
     for m in list(sys.modules.values()):
         if not hasattr(m, '__file__'):
@@ -41,16 +25,37 @@ def get_watchable_files():
     yield os.path.abspath(sys.argv[0])
 
 
+class Monitor(Thread):
+    def __init__(self, event: Event, interval=None, **kwargs):
+        super().__init__(**kwargs)
+        self.event = event
+        self.interval = interval or 0.5
+
+    def run(self):
+        while True:
+            if self.changes_detected():
+                self.event.set()
+            time.sleep(self.interval)
+
+    def changes_detected(self):
+        return
+
+
 class DirectoryMonitor(Monitor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.watching = {}
 
-    def reload_needed(self) -> bool:
+    def changes_detected(self) -> bool:
         diffs = False
 
         for file in get_watchable_files():
-            changed_time = os.path.getmtime(file)
+
+            try:
+                changed_time = os.path.getmtime(file)
+            except FileNotFoundError:
+                del self.watching[file]
+                continue
 
             if file not in self.watching:
                 self.watching[file] = changed_time

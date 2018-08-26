@@ -3,7 +3,7 @@ nopyc:
 
 test: nopyc
 	. venv/bin/activate; \
-	python tests/__init__.py
+	python -m unittest
 
 venv:
 	virtualenv --python=python3 venv

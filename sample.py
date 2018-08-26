@@ -11,7 +11,7 @@ class MyPostEndpoint(Endpoint):
 
 class MyGetEndpoint(Endpoint):
     async def process(self, request):
-        return Ok({'test': 'foo1'})
+        return Ok({'test': 'foo2'})
 
 
 if __name__ == '__main__':
