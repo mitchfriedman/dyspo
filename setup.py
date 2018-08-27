@@ -3,11 +3,12 @@ import setuptools
 
 setuptools.setup(
     name='dyspo',
-    version='0.0.1',
+    version='0.0.2',
     author='Mitchell Friedman',
     author_email='mitchfriedman5@gmail.com',
     description='A web framework',
     url='https://github.com/mitchfriedman/dyspo',
+    packages=setuptools.find_packages(),
     install_requires=[
         'aiohttp==3.3.2',
         'async-timeout==3.0.0',
