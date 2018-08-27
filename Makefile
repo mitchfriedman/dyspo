@@ -1,3 +1,5 @@
+.PHONY: build
+
 nopyc:
 	find . -name '*.pyc' | xargs rm -f || true
 
@@ -14,3 +16,6 @@ clean:
 install: venv
 	. venv/bin/activate; \
 	pip install -r requirements.txt
+
+build:
+	python setup.py sdist bdist_wheel

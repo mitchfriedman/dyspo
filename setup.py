@@ -8,7 +8,7 @@ setuptools.setup(
     author_email='mitchfriedman5@gmail.com',
     description='A web framework',
     url='https://github.com/mitchfriedman/dyspo',
-    packages=[
+    install_requires=[
         'aiohttp==3.3.2',
         'async-timeout==3.0.0',
         'attrs==18.1.0',
