@@ -12,6 +12,7 @@ class Request(object):
                  uri: str=None,
                  headers: Dict[str, str]=None,
                  data: Dict[str, str]=None,
+                 params: Dict[str, str]=None,
                  query: Dict[str, str]=None,
                  username: str=None,
                  password: str=None):
@@ -20,6 +21,7 @@ class Request(object):
         self.uri = uri
         self.headers = headers
         self.data = data
+        self.params = params
         self.query = query
         self.username = username
         self.password = password
@@ -30,6 +32,7 @@ class Request(object):
         scheme = request.scheme
         uri = request.rel_url.path
         headers = dict(request.headers)
+        params = dict(request.match_info)
         query = dict(request.query)
 
         if not request.content.at_eof():
@@ -38,7 +41,7 @@ class Request(object):
             except JSONDecodeError:
                 raise AbortException(BadRequest('Malformed JSON data: {}'.format(await request.content.read())))
         else:
-            data = None
+            data = {}
 
         username = None
         password = None
@@ -52,6 +55,7 @@ class Request(object):
             scheme=scheme,
             headers=headers,
             data=data,
+            params=params,
             query=query,
             username=username,
             password=password,

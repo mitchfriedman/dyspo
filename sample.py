@@ -27,7 +27,13 @@ class MyPostEndpoint(Endpoint):
 
 class MyGetEndpoint(Endpoint):
     async def process(self, request):
-        return Ok({'test1': 'foo2'})
+        return Ok({'test2': 'foo2'})
+
+
+class MyGetEndpointWithMatch(Endpoint):
+    async def process(self, request):
+        info = request.params.get('id')
+        return Ok({'id': info})
 
 
 if __name__ == '__main__':
@@ -35,6 +41,7 @@ if __name__ == '__main__':
 
     api.add_routes([
         Get(MyGetEndpoint(), '/foo'),
+        Get(MyGetEndpointWithMatch(), '/foo/{id}'),
         Post(MyPostEndpoint(ExternalService()), '/foo'),
     ])
 

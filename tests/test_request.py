@@ -7,13 +7,14 @@ from tests import AsyncTest
 
 class TestRequest(AsyncTest):
     def get_request(self, method=None, scheme=None, path=None, data=None,
-                    headers=None, query=None, json=None):
+                    headers=None, params=None, query=None, json=None, at_eof=False):
 
         method = method or 'get'
         scheme = scheme or 'http'
         path = path or '/'
         data = data or {}
         headers = headers or {}
+        params = params or {}
         query = query or {}
         json = json or self.mock_coroutine(return_value=data)
 
@@ -21,8 +22,10 @@ class TestRequest(AsyncTest):
                     scheme=scheme,
                     rel_url=Mock(path=path),
                     headers=headers,
+                    match_info=params,
                     query=query,
-                    json=json)
+                    json=json,
+                    content=Mock(at_eof=Mock(return_value=at_eof)))
 
     def test_from_request_minimal(self):
         request = self.get_request()
@@ -42,6 +45,7 @@ class TestRequest(AsyncTest):
                                    scheme='https',
                                    path='/foo',
                                    data={'foo': 'bar'},
+                                   params={'id': '1'},
                                    headers={'Content-Type': 'application/json', 'Authorization': 'Basic foo:hunter2'},
                                    query={'bar': 'baz'})
 
@@ -53,6 +57,7 @@ class TestRequest(AsyncTest):
         self.assertEqual(actual.headers, {'Content-Type': 'application/json'})
         self.assertEqual(actual.query, {'bar': 'baz'})
         self.assertEqual(actual.data, {'foo': 'bar'})
+        self.assertEqual(actual.params, {'id': '1'})
         self.assertEqual(actual.username, 'foo')
         self.assertEqual(actual.password, 'hunter2')
 
@@ -62,6 +67,13 @@ class TestRequest(AsyncTest):
 
         with self.assertRaises(AbortException):
             self.run_coroutine(Request.from_request(request))
+
+    def test_from_request_at_eof(self):
+        request = self.get_request(at_eof=True)
+
+        actual = self.run_coroutine(Request.from_request(request))
+
+        self.assertEqual(actual.data, {})
 
     def test_from_request_invalid_auth(self):
         request = self.get_request(headers={'Authorization': 'Invalid'})
